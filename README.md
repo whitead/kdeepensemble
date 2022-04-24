@@ -2,7 +2,7 @@
 
 This is an implementation of Lakshminarayanan et al. deep ensembles paper in Keras. It creates an ensemble
 of models that can predict uncertainty. You provide a model which outputs two values (mean, variance) and the
-library will ensemble and resample your data for ensemble training.
+library will ensemble and resample your data for ensemble training. We have made some modifications, which will be described more fully in an upcoming paper. Please no scoops.
 
 This package is meant to be really simple. It has one function and one class: ``resample(y)``, which reshapes data for ensemble training and ``DeepEnsemble``, which ensembles a Keras model.
 
@@ -42,3 +42,16 @@ deep_ens(x)
 ## API
 
 [See API](https://whitead.github.io/kdeepensemble/api.html)
+
+## Citation
+
+Deep ensemble paper:
+```bibtex
+@article{lakshminarayanan2017simple,
+  title={Simple and scalable predictive uncertainty estimation using deep ensembles},
+  author={Lakshminarayanan, Balaji and Pritzel, Alexander and Blundell, Charles},
+  journal={Advances in neural information processing systems},
+  volume={30},
+  year={2017}
+}
+```
