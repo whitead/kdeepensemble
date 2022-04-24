@@ -41,6 +41,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#api">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
@@ -75,7 +76,7 @@
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
 <p>This is an implementation of Lakshminarayanan et al. deep ensembles paper in Keras. It creates an ensemble
 of models that can predict uncertainty. You provide a model which outputs two values (mean, variance) and the
-library will ensemble and resample your data for ensemble training.</p>
+library will ensemble and resample your data for ensemble training. We have made some modifications, which will be described more fully in an upcoming paper. Please no scoops.</p>
 <p>This package is meant to be really simple. It has one function and one class: <code class="docutils literal notranslate"><span class="pre">resample(y)</span></code>, which reshapes data for ensemble training and <code class="docutils literal notranslate"><span class="pre">DeepEnsemble</span></code>, which ensembles a Keras model.</p>
 <section id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline"></a></h2>
@@ -112,6 +113,19 @@ library will ensemble and resample your data for ensemble training.</p>
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this headline"></a></h2>
 <p><a class="reference external" href="https://whitead.github.io/kdeepensemble/api.html">See API</a></p>
+</section>
+<section id="citation">
+<h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline"></a></h2>
+<p>Deep ensemble paper:</p>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">lakshminarayanan2017simple</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Simple and scalable predictive uncertainty estimation using deep ensembles}</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Lakshminarayanan, Balaji and Pritzel, Alexander and Blundell, Charles}</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="na">journal</span><span class="p">=</span><span class="s">{Advances in neural information processing systems}</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="na">volume</span><span class="p">=</span><span class="s">{30}</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2017}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 </section>
 </section>
 
