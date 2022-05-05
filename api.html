@@ -121,6 +121,24 @@ the first half of model which outputs the value to be adversarially perturbed, a
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="kdens.kdens.map_reshape">
+<span class="sig-name descname"><span class="pre">map_reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.map_reshape" title="Permalink to this definition"></a></dt>
+<dd><p>Duplicate the given record to be compatible with the ensemble model.’</p>
+<p>Each record will be reshaped to (nmodels, <a href="#id1"><span class="problematic" id="id2">*</span></a>x.shape).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nmodels</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The number of ensemble models</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A function to be used in <cite>tf.data.Dataset.map</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="kdens.kdens.resample">
 <span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,</span> <span class="pre">5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nclasses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.resample" title="Permalink to this definition"></a></dt>
 <dd><p>Resample the given y-vector to have a uniform classes,
