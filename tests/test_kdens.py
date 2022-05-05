@@ -61,6 +61,39 @@ class TestKDens(unittest.TestCase):
         assert d(x).shape == (100, 3)
         d.evaluate(x, y)
 
+    def test_deep_ensemble_tfdata(self):
+        x = np.random.randn(100, 10).astype(np.float32)
+        y = np.random.randn(100).astype(np.float32)
+        data = tf.data.Dataset.from_tensor_slices((x, y)).map(map_reshape()).batch(8)
+        d = DeepEnsemble(
+            lambda: tf.keras.Sequential(
+                [tf.keras.layers.Dense(10, activation="relu"), tf.keras.layers.Dense(2)]
+            )
+        )
+        d.compile(metrics=["mae"])
+        d.fit(data, epochs=2)
+        y_pred = d.predict(x)
+        assert y_pred.shape == (100, 3)
+        assert d(x).shape == (100, 3)
+        d.evaluate(x, y)
+
+    def test_deep_ensemble_tfdata_resample(self):
+        x = np.random.randn(100, 10).astype(np.float32)
+        y = np.random.randn(100).astype(np.float32)
+        data = tf.data.Dataset.from_tensor_slices((x, y)).map(map_reshape()).batch(8)
+
+        d = DeepEnsemble(
+            lambda: tf.keras.Sequential(
+                [tf.keras.layers.Dense(10, activation="relu"), tf.keras.layers.Dense(2)]
+            )
+        )
+        d.compile(metrics=["mae"])
+        d.fit(data, epochs=2)
+        y_pred = d.predict(x)
+        assert y_pred.shape == (100, 3)
+        assert d(x).shape == (100, 3)
+        d.evaluate(x, y)
+
     def test_deep_ensemble_partial(self):
         x = np.random.randint(0, 10, size=(100, 25))
         y = np.random.randn(100)
