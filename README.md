@@ -4,7 +4,7 @@ This is an implementation of Lakshminarayanan et al. deep ensembles paper in Ker
 of models that can predict uncertainty. You provide a model which outputs two values (mean, variance) and the
 library will ensemble and resample your data for ensemble training. We have made some modifications, which will be described more fully in an upcoming paper. Please no scoops.
 
-This package is meant to be really simple. It has one function and one class: ``resample(y)``, which reshapes data for ensemble training and ``DeepEnsemble``, which ensembles a Keras model.
+This package is meant to be really simple. It has one function and one class: ``resample(y)``, which reshapes data for ensemble training and ``DeepEnsemble``, which ensembles a Keras model. *It only can be used for regression.*
 
 ## Quickstart
 
@@ -38,6 +38,26 @@ deep_ens.fit(x_train, y_train)
 
 deep_ens(x)
 ```
+
+## Model Output
+
+The output is shape `(N, 3)`, where the last axis is mean, variance, and epistemic variance. Epistemic variance is from disagreements from models and reflects model uncertainty. The variance includes both epistemic and aleatoric variance. It represents the models best estimate of uncertainty.
+
+## Tensorflow Dataset
+
+You can use ``map_reshape`` when working with a Tensorflow dataset.
+
+```python
+
+# data is a tf.data.Dataset
+
+data = data.map(kdens.map_reshape()).batch(8)
+deep_ens = kdens.DeepEnsemble(make_model)
+deep_ens.compile()
+deep_ens.fit(data)
+```
+
+Note that ``map_reshape`` will not resample, just reshape. If you would like to balance your labels, consider [`rejection_sample`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset).
 
 ## API
 

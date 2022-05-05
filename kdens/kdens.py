@@ -38,6 +38,21 @@ def resample(
     return f(c)
 
 
+def map_reshape(nmodels: int = 5) -> Callable[..., Tuple[tf.Tensor]]:
+    """Duplicate the given record to be compatible with the ensemble model.'
+
+    Each record will be reshaped to (nmodels, *x.shape).
+
+    :param nmodels: The number of ensemble models
+    :return: A function to be used in `tf.data.Dataset.map`
+    """
+
+    def f(*xs: tf.Tensor) -> Tuple[tf.Tensor]:
+        return tuple(tf.tile(x[None], [nmodels] + [1] * x.shape.rank) for x in xs)
+
+    return f
+
+
 class DeepEnsemble(tf.keras.Model):
     """Bayesian Deep Ensemble model
 
