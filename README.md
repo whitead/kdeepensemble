@@ -6,6 +6,12 @@ library will ensemble and resample your data for ensemble training. We have made
 
 This package is meant to be really simple. It has one function and one class: ``resample(y)``, which reshapes data for ensemble training and ``DeepEnsemble``, which ensembles a Keras model. *It only can be used for regression.*
 
+## Install
+
+```sh
+pip install kdeepensemble
+```
+
 ## Quickstart
 
 This example makes a Keras model inside a function and then reshapes data for ensemble training. Notice a ``DeepEnsemble`` model acts just like a Keras model.
