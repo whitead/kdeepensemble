@@ -3,6 +3,35 @@ import tensorflow as tf
 from typing import *
 
 
+@tf.function
+def _model_slice_inputs(inputs, i):
+    # slice out model index from inputs
+    if type(inputs) is tuple:
+        return tuple(_model_slice_inputs(x, i) for x in inputs)
+    return inputs[:, i]
+
+
+@tf.function
+def _tuple_stack(x, axis=1):
+    # check if we have a list of tuples, if so then
+    # we actually want to have a tuple of stacks
+    if type(x[0]) is tuple:
+        return tuple(tf.stack([xi[i] for xi in x], axis=axis) for i in range(len(x[0])))
+    return tf.stack(x, axis=axis)
+
+
+@tf.keras.utils.register_keras_serializable(package="kdens")
+def neg_ll(y_true, y_pred):
+    """Negative log-likelihood loss"""
+    y_pred = tf.convert_to_tensor(y_pred)
+    y_true = tf.cast(y_true, y_pred.dtype)
+    loss = 0.5 * (
+        tf.math.log(y_pred[..., 1])
+        + tf.math.divide_no_nan((y_pred[..., 0] - y_true) ** 2, y_pred[..., 1])
+    )
+    return loss
+
+
 def resample(
     y: np.ndarray, output_shape: tuple = (None, 5), nclasses: int = 10
 ) -> np.ndarray:
@@ -38,21 +67,59 @@ def resample(
     return f(c)
 
 
-def map_reshape(nmodels: int = 5) -> Callable[..., Tuple[tf.Tensor]]:
+def map_reshape(nmodels: int = 5, is_batched=False) -> Callable[..., Tuple[tf.Tensor]]:
     """Duplicate the given record to be compatible with the ensemble model.'
 
-    Each record will be reshaped to (nmodels, *x.shape).
+    Each record will be reshaped to (nmodels, *x.shape)
+
+    :param nmodels: The number of ensemble models
+    :param is_batched: If the input is batched, so `nmodels` will go in the first dimension
+    :return: A function to be used in `tf.data.Dataset.map`
+    """
+
+    def f(*xs: Union[Tuple[tf.Tensor], tf.Tensor]) -> Any:
+        # xs can be tuple of tensors or tuple of tuples of tensors
+        def parse_record(x: tf.Tensor) -> tf.Tensor:
+            if is_batched:
+                return tf.tile(
+                    x[:, None],
+                    tf.concat(
+                        ([1], [nmodels], tf.ones(tf.rank(x) - 1, dtype=tf.int32)),
+                        axis=0,
+                    ),
+                )
+            else:
+                return tf.tile(
+                    x[None],
+                    tf.concat(([nmodels], tf.ones(tf.rank(x), dtype=tf.int32)), axis=0),
+                )
+
+        return tuple(f(*x) if type(x) is tuple else parse_record(x) for x in xs)
+
+    return f
+
+
+def map_batch_reshape(nmodels: int = 5) -> Callable[..., Tuple[tf.Tensor]]:
+    """Reshape the given batched record to be compatible with the ensemble model.'
+
+    Each record will be reshaped to (B, nmodels, *x.shape[1:]). The batch size
+    must be a multiple of the number of ensemble models
 
     :param nmodels: The number of ensemble models
     :return: A function to be used in `tf.data.Dataset.map`
     """
 
-    def f(*xs: tf.Tensor) -> Tuple[tf.Tensor]:
-        return tuple(tf.tile(x[None], [nmodels] + [1] * x.shape.rank) for x in xs)
+    def f(*xs: Union[Tuple[tf.Tensor], tf.Tensor]) -> Any:
+        # xs can be tuple of tensors or tuple of tuples of tensors
+        def parse_record(x: tf.Tensor) -> tf.Tensor:
+            return tf.reshape(x, tf.concat(([-1], [nmodels], tf.shape(x)[1:]), axis=0))
+
+        return tuple(f(*x) if type(x) is tuple else parse_record(x) for x in xs)
 
     return f
 
 
+@tf.keras.utils.register_keras_serializable(package="kdens")
 class DeepEnsemble(tf.keras.Model):
     """Bayesian Deep Ensemble model
 
@@ -78,7 +145,7 @@ class DeepEnsemble(tf.keras.Model):
 
     def __init__(
         self,
-        build_fxn: Callable[[], Union[tf.keras.Model, Tuple[tf.keras.Model]]],
+        build_fxn: Callable[[], Union[tf.keras.Model, Tuple[tf.keras.Model]]] = None,
         nmodels: int = 5,
         adv_epsilon: float = 1e-3,
         partial: bool = False,
@@ -87,43 +154,69 @@ class DeepEnsemble(tf.keras.Model):
     ):
         super(DeepEnsemble, self).__init__(name=name, **kwargs)
         self.nmodels = nmodels
-        if partial:
-            self.models = []
-            self.partials = []
-            for i in range(self.nmodels):
-                m = build_fxn()
-                if len(m) != 3:
-                    raise ValueError("Must return 3 models in partial mode")
-                self.models.append(m[0])
-                self.partials.append(m[1:])
-        else:
-            self.models = [build_fxn() for _ in range(nmodels)]
-            self.partials = None
+
+        if build_fxn:
+            if partial:
+                self.models = []
+                self.partials = []
+                for i in range(self.nmodels):
+                    m = build_fxn()
+                    if len(m) != 3:
+                        raise ValueError("Must return 3 models in partial mode")
+                    self.models.append(m[0])
+                    self.partials.append(m[1:])
+            else:
+                self.models = [build_fxn() for _ in range(nmodels)]
+                self.partials = None
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
         self.adv_loss_tracker = tf.keras.metrics.Mean(name="adv_loss")
         self.eps = adv_epsilon
 
+    def get_config(self):
+        config = super(DeepEnsemble, self).get_config()
+        config["nmodels"] = self.nmodels
+        config["adv_epsilon"] = self.eps
+        config["partial"] = self.partials is not None
+        config["partials"] = self.partials
+        config["models"] = self.models
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        obj = cls(**config)
+        obj.models.partials = config["partials"]
+        obj.models.models = config["models"]
+
     def call(self, inputs, training=None):
         """See :py:class:`tf.keras.Model.call`"""
-        if training:
-            outs = tf.stack(
-                [self.models[i](inputs[:, i], training) for i in range(self.nmodels)],
-                axis=1,
-            )
-            outs = tf.stack(
-                [outs[..., 0], tf.clip_by_value(outs[..., 1], 0, np.inf)], axis=-1
-            )
-        else:
-            outs = tf.stack(
-                [self.models[i](inputs, training) for i in range(self.nmodels)], axis=1
-            )
-            outs = tf.stack(
-                [outs[..., 0], tf.clip_by_value(outs[..., 1], 0, np.inf)], axis=-1
-            )
-            mu = tf.reduce_mean(outs[..., 0], axis=1)
-            epi_var = tf.math.reduce_variance(outs[..., 0], axis=1)
-            var = tf.reduce_mean(outs[..., 1] + outs[..., 0] ** 2, axis=1) - mu**2
-            outs = tf.stack([mu, var, epi_var], axis=-1)
+        outs = tf.stack(
+            [self.models[i](inputs, training) for i in range(self.nmodels)], axis=1
+        )
+        outs = tf.stack(
+            [outs[..., 0], tf.clip_by_value(outs[..., 1], 0, np.inf)], axis=-1
+        )
+        mu = tf.reduce_mean(outs[..., 0], axis=1)
+        epi_var = tf.math.reduce_variance(outs[..., 0], axis=1)
+        var = tf.reduce_mean(outs[..., 1] + outs[..., 0] ** 2, axis=1) - mu**2
+        outs = tf.stack([mu, var, epi_var], axis=-1)
+        return outs
+
+    def full_call(self, inputs, training=None):
+        """Call of models with complete model output (one for each ensemble model)
+
+        :param inputs: The inputs to the model - tensor or tuple of tensors
+        :param training: `training` flag passed to individual models
+        """
+        outs = tf.stack(
+            [
+                self.models[i](_model_slice_inputs(inputs, i), training)
+                for i in range(self.nmodels)
+            ],
+            axis=1,
+        )
+        outs = tf.stack(
+            [outs[..., 0], tf.clip_by_value(outs[..., 1], 0, np.inf)], axis=-1
+        )
         return outs
 
     @property
@@ -135,51 +228,72 @@ class DeepEnsemble(tf.keras.Model):
         """See :py:class:`tf.keras.Model.train_step`"""
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
-        x, y = data
+        if len(data) == 3:
+            x, y, sample_weight = data
+        else:
+            x, y = data
+            sample_weight = tf.ones_like(y)
+        extra_h = None
         with tf.GradientTape() as tape:
             # do we need to do adv step partway through model?
             if self.partials:
-                xh = tf.stack(
-                    [self.partials[i][0](x[:, i], True) for i in range(self.nmodels)],
+                xh = _tuple_stack(
+                    [
+                        self.partials[i][0](_model_slice_inputs(x, i), True)
+                        for i in range(self.nmodels)
+                    ],
                     axis=1,
                 )
-                tape.watch(xh)
+                if type(xh) is tuple:
+                    tape.watch(xh[0])
+                else:
+                    tape.watch(xh)
                 outs = tf.stack(
-                    [self.partials[i][1](xh[:, i], True) for i in range(self.nmodels)],
+                    [
+                        self.partials[i][1](_model_slice_inputs(xh, i), True)
+                        for i in range(self.nmodels)
+                    ],
                     axis=1,
                 )
             else:
                 xh = x
-                tape.watch(xh)
-                outs = self(xh, training=True)  # Forward pazss
+                if type(xh) is tuple:
+                    tape.watch(xh[0])
+                else:
+                    tape.watch(xh)
+                outs = self.full_call(xh, training=True)  # Forward pass
             # Compute the loss value
-            # (the loss function is configured in `compile()`)
-            loss = 0.5 * (
-                tf.math.log(outs[..., 1]) + (outs[..., 0] - y) ** 2 / outs[..., 1]
-            )
+            loss = self.compiled_loss(y, outs, regularization_losses=self.losses)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
-        gradients, xgrad = tape.gradient(loss, [trainable_vars, xh])
+        if type(xh) is tuple:
+            gradients, xgrad = tape.gradient(loss, [trainable_vars, xh[0]])
+        else:
+            gradients, xgrad = tape.gradient(loss, [trainable_vars, xh])
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # adv step
-        xp = xh + self.eps * tf.math.sign(xgrad)
+        if type(xh) is tuple:
+            xp = xh[0] + self.eps * tf.math.sign(xgrad), *xh[1:]
+        else:
+            xp = xh + self.eps * tf.math.sign(xgrad)
 
         with tf.GradientTape() as tape:
             if self.partials:
                 outs = tf.stack(
-                    [self.partials[i][1](xp[:, i], True) for i in range(self.nmodels)],
+                    [
+                        self.partials[i][1](_model_slice_inputs(xp, i), True)
+                        for i in range(self.nmodels)
+                    ],
                     axis=1,
                 )
             else:
-                outs = self(xp, training=True)  # Forward pazss
+                outs = self.full_call(xp, training=True)  # Forward pazss
             # Compute the loss value
             # (the loss function is configured in `compile()`)
-            adv_loss = 0.5 * (
-                tf.math.log(outs[..., 1]) + (outs[..., 0] - y) ** 2 / outs[..., 1]
-            )
+            adv_loss = self.compiled_loss(y, outs, regularization_losses=self.losses)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -209,12 +323,16 @@ class DeepEnsemble(tf.keras.Model):
         """See :py:class:`tf.keras.Model.test_step`"""
         # custom test step so metrics will receive just predicted valus
         # Unpack the data
-        x, y = data
+        if len(data) == 3:
+            x, y, sample_weight = data
+        else:
+            x, y = data
+            sample_weight = tf.ones_like(y)
         # Compute predictions
         outs = self(x, training=False)
         mu = outs[..., 0]
         var = outs[..., 1]
-        loss = 0.5 * (tf.math.log(var) + (mu - y) ** 2 / var)
+        loss = self.compiled_loss(y, outs, regularization_losses=self.losses)
         self.compiled_metrics.update_state(y, mu)
         self.loss_tracker.update_state(loss)
         # Return a dict mapping metric names to current value

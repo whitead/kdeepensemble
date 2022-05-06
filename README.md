@@ -43,9 +43,13 @@ deep_ens(x)
 
 The output is shape `(N, 3)`, where the last axis is mean, variance, and epistemic variance. Epistemic variance is from disagreements from models and reflects model uncertainty. The variance includes both epistemic and aleatoric variance. It represents the models best estimate of uncertainty.
 
+## Saving/Loading
+
+You can serialize the model with `model.save`, but note that training will not be abel to continue. To continue training, use the `load_weights` and `save_weights` methods.
+
 ## Tensorflow Dataset
 
-You can use ``map_reshape`` when working with a Tensorflow dataset.
+You can use ``map_reshape`` when working with a Tensorflow dataset. If your data is already batched, add the `is_batched=True` argument.
 
 ```python
 
@@ -58,6 +62,42 @@ deep_ens.fit(data)
 ```
 
 Note that ``map_reshape`` will not resample, just reshape. If you would like to balance your labels, consider [`rejection_sample`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset).
+
+## Working with multiple inputs
+
+This library does support Keras models that have multiple inputs with the following restrictions:
+
+1. The inputs must be tuples (lists and dicts are not supported).
+2. The adversarial step will be done on only the first element of the input tuple.
+
+Here's an example
+
+```python
+
+# make a model that takes three inputs as a tuple
+x = np.random.randn(100, 10).astype(np.float32)
+t = np.random.randn(100, 10, 3).astype(np.float32)
+z = np.random.randn(100, 10, 3).astype(np.float32)
+y = np.random.randn(100).astype(np.float32)
+
+# note we still use map_reshape
+data = tf.data.Dataset.from_tensor_slices(
+    ((x, t, z), y)).map(map_reshape()).batch(8)
+
+def build():
+    xi = tf.keras.layers.Input(shape=(10,))
+    ti = tf.keras.layers.Input(shape=(10, 3))
+    zi = tf.keras.layers.Input(shape=(10, 3))
+    x = tf.keras.layers.Dense(2)(xi)
+    return tf.keras.Model(inputs=(xi, ti, zi), outputs=x)
+d = DeepEnsemble(
+    build
+)
+
+d.compile(metrics=["mae"])
+d.fit(data, epochs=2)
+d.evaluate((x, t, z), y)
+```
 
 ## API
 
