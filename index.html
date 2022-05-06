@@ -82,7 +82,6 @@
 <p>This is an implementation of Lakshminarayanan et al. deep ensembles paper in Keras. It creates an ensemble
 of models that can predict uncertainty. You provide a model which outputs two values (mean, variance) and the
 library will ensemble and resample your data for ensemble training. We have made some modifications, which will be described more fully in an upcoming paper. Please no scoops.</p>
-<p>This package is meant to be really simple. It has one function and one class: <code class="docutils literal notranslate"><span class="pre">resample(y)</span></code>, which reshapes data for ensemble training and <code class="docutils literal notranslate"><span class="pre">DeepEnsemble</span></code>, which ensembles a Keras model. <em>It only can be used for regression.</em></p>
 <section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline"></a></h2>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install kdeepensemble
@@ -130,7 +129,7 @@ library will ensemble and resample your data for ensemble training. We have made
 </section>
 <section id="tensorflow-dataset">
 <h2>Tensorflow Dataset<a class="headerlink" href="#tensorflow-dataset" title="Permalink to this headline"></a></h2>
-<p>You can use <code class="docutils literal notranslate"><span class="pre">map_reshape</span></code> when working with a Tensorflow dataset. If your data is already batched, add the <code class="docutils literal notranslate"><span class="pre">is_batched=True</span></code> argument.</p>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">map_reshape</span></code> when working with a Tensorflow dataset. It will  If your data is already batched, add the <code class="docutils literal notranslate"><span class="pre">is_batched=True</span></code> argument.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
 <span class="c1"># data is a tf.data.Dataset</span>
 
@@ -157,7 +156,7 @@ library will ensemble and resample your data for ensemble training. We have made
 <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
-<span class="c1"># note we still use map_reshape</span>
+<span class="c1"># can still use map_reshape with tuples</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
     <span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_reshape</span><span class="p">())</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
 
