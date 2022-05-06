@@ -41,7 +41,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#model-output">Model Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-loading">Saving/Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tensorflow-dataset">Tensorflow Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-multiple-inputs">Working with multiple inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#api">API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
 </ul>
@@ -104,8 +106,7 @@ library will ensemble and resample your data for ensemble training. We have made
 
 <span class="n">deep_ens</span> <span class="o">=</span> <span class="n">kdens</span><span class="o">.</span><span class="n">DeepEnsemble</span><span class="p">(</span><span class="n">make_model</span><span class="p">)</span>
 
-<span class="c1"># loss is always log-likelihood, so not specified</span>
-<span class="n">deep_ens</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="n">deep_ens</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">kdens</span><span class="o">.</span><span class="n">neg_ll</span><span class="p">)</span>
 <span class="n">deep_ens</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
 <span class="n">deep_ens</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -116,19 +117,56 @@ library will ensemble and resample your data for ensemble training. We have made
 <h2>Model Output<a class="headerlink" href="#model-output" title="Permalink to this headline"></a></h2>
 <p>The output is shape <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">3)</span></code>, where the last axis is mean, variance, and epistemic variance. Epistemic variance is from disagreements from models and reflects model uncertainty. The variance includes both epistemic and aleatoric variance. It represents the models best estimate of uncertainty.</p>
 </section>
+<section id="saving-loading">
+<h2>Saving/Loading<a class="headerlink" href="#saving-loading" title="Permalink to this headline"></a></h2>
+<p>You can serialize the model with <code class="docutils literal notranslate"><span class="pre">model.save</span></code>, but note that training will not be abel to continue. To continue training, use the <code class="docutils literal notranslate"><span class="pre">load_weights</span></code> and <code class="docutils literal notranslate"><span class="pre">save_weights</span></code> methods.</p>
+</section>
 <section id="tensorflow-dataset">
 <h2>Tensorflow Dataset<a class="headerlink" href="#tensorflow-dataset" title="Permalink to this headline"></a></h2>
-<p>You can use <code class="docutils literal notranslate"><span class="pre">map_reshape</span></code> when working with a Tensorflow dataset.</p>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">map_reshape</span></code> when working with a Tensorflow dataset. If your data is already batched, add the <code class="docutils literal notranslate"><span class="pre">is_batched=True</span></code> argument.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
 <span class="c1"># data is a tf.data.Dataset</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">kdens</span><span class="o">.</span><span class="n">map_reshape</span><span class="p">())</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
 <span class="n">deep_ens</span> <span class="o">=</span> <span class="n">kdens</span><span class="o">.</span><span class="n">DeepEnsemble</span><span class="p">(</span><span class="n">make_model</span><span class="p">)</span>
-<span class="n">deep_ens</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="n">deep_ens</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">kdens</span><span class="o">.</span><span class="n">neg_ll</span><span class="p">)</span>
 <span class="n">deep_ens</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">map_reshape</span></code> will not resample, just reshape. If you would like to balance your labels, consider <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset"><code class="docutils literal notranslate"><span class="pre">rejection_sample</span></code></a>.</p>
+</section>
+<section id="working-with-multiple-inputs">
+<h2>Working with multiple inputs<a class="headerlink" href="#working-with-multiple-inputs" title="Permalink to this headline"></a></h2>
+<p>This library does support Keras models that have multiple inputs with the following restrictions:</p>
+<ol class="arabic simple">
+<li><p>The inputs must be tuples (lists and dicts are not supported).</p></li>
+<li><p>The adversarial step will be done on only the first element of the input tuple.</p></li>
+</ol>
+<p>Here’s an example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># make a model that takes three inputs as a tuple</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># note we still use map_reshape</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+    <span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_reshape</span><span class="p">())</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">():</span>
+    <span class="n">xi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,))</span>
+    <span class="n">ti</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">zi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">2</span><span class="p">)(</span><span class="n">xi</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">ti</span><span class="p">,</span> <span class="n">zi</span><span class="p">),</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+<span class="n">deep_ens</span> <span class="o">=</span> <span class="n">kdens</span><span class="o">.</span><span class="n">DeepEnsemble</span><span class="p">(</span><span class="n">make_model</span><span class="p">)</span>
+<span class="n">deep_ens</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">kdens</span><span class="o">.</span><span class="n">neg_ll</span><span class="p">)</span>
+<span class="n">deep_ens</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">deep_ens</span><span class="o">.</span><span class="n">evaluate</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this headline"></a></h2>

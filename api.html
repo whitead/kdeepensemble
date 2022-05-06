@@ -70,7 +70,7 @@
 <span id="api"></span><h1>API<a class="headerlink" href="#module-kdens.kdens" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="kdens.kdens.DeepEnsemble">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeepEnsemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_fxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adv_epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'deep-ensemble'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeepEnsemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_fxn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adv_epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'deep-ensemble'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.training.Model</span></code></p>
 <p>Bayesian Deep Ensemble model</p>
 <p>This model is a Bayesian Deep Ensemble model as described by Lakshminarayanan et al. It fits an ensemble
@@ -85,7 +85,7 @@ the first half of model which outputs the value to be adversarially perturbed, a
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>build_fxn</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code>]]]) – A function that returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.model</span></code> or a tuple of <code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.model</span></code> (if <code class="docutils literal notranslate"><span class="pre">partial=True</span></code>)</p></li>
+<li><p><strong>build_fxn</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code>]]]]) – A function that returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.model</span></code> or a tuple of <code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.model</span></code> (if <code class="docutils literal notranslate"><span class="pre">partial=True</span></code>)</p></li>
 <li><p><strong>nmodels</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The number of models to use in the ensemble.</p></li>
 <li><p><strong>adv_epsilon</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – The epsilon for adversarial perturbation.</p></li>
 <li><p><strong>partial</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Whether the build fxn breaks up model to enable perturabtion at intermediate layers.</p></li>
@@ -98,6 +98,59 @@ the first half of model which outputs the value to be adversarially perturbed, a
 <dt class="sig sig-object py" id="kdens.kdens.DeepEnsemble.call">
 <span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble.call" title="Permalink to this definition"></a></dt>
 <dd><p>See <code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Model.call</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kdens.kdens.DeepEnsemble.from_config">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble.from_config" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a layer from its config.</p>
+<p>This method is the reverse of <cite>get_config</cite>,
+capable of instantiating the same layer from the config
+dictionary. It does not handle layer connectivity
+(handled by Network), nor weights (handled by <cite>set_weights</cite>).</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>config: A Python dictionary, typically the</dt><dd><p>output of get_config.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>A layer instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kdens.kdens.DeepEnsemble.full_call">
+<span class="sig-name descname"><span class="pre">full_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble.full_call" title="Permalink to this definition"></a></dt>
+<dd><p>Call of models with complete model output (one for each ensemble model)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> – The inputs to the model - tensor or tuple of tensors</p></li>
+<li><p><strong>training</strong> – <cite>training</cite> flag passed to individual models</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kdens.kdens.DeepEnsemble.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble.get_config" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<p>Note that <cite>get_config()</cite> does not guarantee to return a fresh copy of dict
+every time it is called. The callers should make a copy of the returned dict
+if they want to modify it.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Python dictionary.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -121,10 +174,11 @@ the first half of model which outputs the value to be adversarially perturbed, a
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kdens.kdens.map_reshape">
-<span class="sig-name descname"><span class="pre">map_reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.map_reshape" title="Permalink to this definition"></a></dt>
-<dd><p>Duplicate the given record to be compatible with the ensemble model.’</p>
-<p>Each record will be reshaped to (nmodels, <a href="#id1"><span class="problematic" id="id2">*</span></a>x.shape).</p>
+<dt class="sig sig-object py" id="kdens.kdens.map_batch_reshape">
+<span class="sig-name descname"><span class="pre">map_batch_reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.map_batch_reshape" title="Permalink to this definition"></a></dt>
+<dd><p>Reshape the given batched record to be compatible with the ensemble model.’</p>
+<p>Each record will be reshaped to (B, nmodels, <a href="#id1"><span class="problematic" id="id2">*</span></a>x.shape[1:]). The batch size
+must be a multiple of the number of ensemble models</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>nmodels</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The number of ensemble models</p>
@@ -136,6 +190,33 @@ the first half of model which outputs the value to be adversarially perturbed, a
 <dd class="field-odd"><p>A function to be used in <cite>tf.data.Dataset.map</cite></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kdens.kdens.map_reshape">
+<span class="sig-name descname"><span class="pre">map_reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_batched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.map_reshape" title="Permalink to this definition"></a></dt>
+<dd><p>Duplicate the given record to be compatible with the ensemble model.’</p>
+<p>Each record will be reshaped to (nmodels, <a href="#id3"><span class="problematic" id="id4">*</span></a>x.shape)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nmodels</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The number of ensemble models</p></li>
+<li><p><strong>is_batched</strong> – If the input is batched, so <cite>nmodels</cite> will go in the first dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A function to be used in <cite>tf.data.Dataset.map</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kdens.kdens.neg_ll">
+<span class="sig-name descname"><span class="pre">neg_ll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.neg_ll" title="Permalink to this definition"></a></dt>
+<dd><p>Negative log-likelihood loss</p>
 </dd></dl>
 
 <dl class="py function">
