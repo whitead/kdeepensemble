@@ -222,7 +222,7 @@ class DeepEnsemble(tf.keras.Model):
     @property
     def metrics(self):
         """See :py:class:`tf.keras.Model.metrics`"""
-        return [self.loss_tracker]
+        return [self.loss_tracker] + super(DeepEnsemble, self).metrics
 
     def train_step(self, data):
         """See :py:class:`tf.keras.Model.train_step`"""
@@ -233,7 +233,6 @@ class DeepEnsemble(tf.keras.Model):
         else:
             x, y = data
             sample_weight = tf.ones_like(y)
-        extra_h = None
         with tf.GradientTape() as tape:
             # do we need to do adv step partway through model?
             if self.partials:
