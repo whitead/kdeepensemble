@@ -32,8 +32,7 @@ y_train = y[idx]
 
 deep_ens = kdens.DeepEnsemble(make_model)
 
-# loss is always log-likelihood, so not specified
-deep_ens.compile()
+deep_ens.compile(loss=kdens.neg_ll)
 deep_ens.fit(x_train, y_train)
 
 deep_ens(x)
@@ -57,7 +56,7 @@ You can use ``map_reshape`` when working with a Tensorflow dataset. If your data
 
 data = data.map(kdens.map_reshape()).batch(8)
 deep_ens = kdens.DeepEnsemble(make_model)
-deep_ens.compile()
+deep_ens.compile(loss=kdens.neg_ll)
 deep_ens.fit(data)
 ```
 
@@ -90,13 +89,11 @@ def build():
     zi = tf.keras.layers.Input(shape=(10, 3))
     x = tf.keras.layers.Dense(2)(xi)
     return tf.keras.Model(inputs=(xi, ti, zi), outputs=x)
-d = DeepEnsemble(
-    build
-)
 
-d.compile(metrics=["mae"])
-d.fit(data, epochs=2)
-d.evaluate((x, t, z), y)
+deep_ens = kdens.DeepEnsemble(make_model)
+deep_ens.compile(loss=kdens.neg_ll)
+deep_ens.fit(data, epochs=2)
+deep_ens.evaluate((x, t, z), y)
 ```
 
 ## API
