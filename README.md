@@ -4,8 +4,6 @@ This is an implementation of Lakshminarayanan et al. deep ensembles paper in Ker
 of models that can predict uncertainty. You provide a model which outputs two values (mean, variance) and the
 library will ensemble and resample your data for ensemble training. We have made some modifications, which will be described more fully in an upcoming paper. Please no scoops.
 
-This package is meant to be really simple. It has one function and one class: ``resample(y)``, which reshapes data for ensemble training and ``DeepEnsemble``, which ensembles a Keras model. *It only can be used for regression.*
-
 ## Install
 
 ```sh
@@ -54,7 +52,7 @@ You can serialize the model with `model.save`, but note that training will not b
 
 ## Tensorflow Dataset
 
-You can use ``map_reshape`` when working with a Tensorflow dataset. If your data is already batched, add the `is_batched=True` argument.
+You can use ``map_reshape`` when working with a Tensorflow dataset. It will  If your data is already batched, add the `is_batched=True` argument.
 
 ```python
 
@@ -85,7 +83,7 @@ t = np.random.randn(100, 10, 3).astype(np.float32)
 z = np.random.randn(100, 10, 3).astype(np.float32)
 y = np.random.randn(100).astype(np.float32)
 
-# note we still use map_reshape
+# can still use map_reshape with tuples
 data = tf.data.Dataset.from_tensor_slices(
     ((x, t, z), y)).map(map_reshape()).batch(8)
 
