@@ -1,6 +1,7 @@
 from datetime import datetime
 import unittest
 import numpy as np
+from kdens.kdens import map_tile
 import tensorflow as tf
 from kdens import *
 import shutil
@@ -87,7 +88,7 @@ class TestKDens(unittest.TestCase):
     def test_deep_ensemble_tfdata(self):
         x = np.random.randn(100, 10).astype(np.float32)
         y = np.random.randn(100).astype(np.float32)
-        data = tf.data.Dataset.from_tensor_slices((x, y)).map(map_reshape()).batch(8)
+        data = tf.data.Dataset.from_tensor_slices((x, y)).map(map_tile()).batch(8)
         d = DeepEnsemble(
             lambda: tf.keras.Sequential(
                 [tf.keras.layers.Dense(10, activation="relu"), tf.keras.layers.Dense(2)]
@@ -116,7 +117,7 @@ class TestKDens(unittest.TestCase):
         data = (
             tf.data.Dataset.from_tensor_slices((x, y))
             .batch(4)
-            .map(map_reshape(is_batched=True))
+            .map(map_tile(is_batched=True))
         )
         d.fit(data, epochs=2)
         y_pred = d.predict(x)
@@ -131,7 +132,7 @@ class TestKDens(unittest.TestCase):
         y = np.random.randn(100).astype(np.float32)
         data = (
             tf.data.Dataset.from_tensor_slices(((x, t, z), y))
-            .map(map_reshape())
+            .map(map_tile())
             .batch(8)
         )
 
@@ -158,7 +159,7 @@ class TestKDens(unittest.TestCase):
         y = np.random.randn(100).astype(np.float32)
         data = (
             tf.data.Dataset.from_tensor_slices(((x, t, z), y))
-            .map(map_reshape())
+            .map(map_tile())
             .batch(8)
         )
 
@@ -189,7 +190,7 @@ class TestKDens(unittest.TestCase):
     def test_deep_ensemble_tfdata_resample(self):
         x = np.random.randn(100, 10).astype(np.float32)
         y = np.random.randn(100).astype(np.float32)
-        data = tf.data.Dataset.from_tensor_slices((x, y)).map(map_reshape()).batch(8)
+        data = tf.data.Dataset.from_tensor_slices((x, y)).map(map_tile()).batch(8)
 
         d = DeepEnsemble(
             lambda: tf.keras.Sequential(

@@ -42,9 +42,11 @@ def resample(
 
     :param y: The vector of class labels.
     :param output_shape: The shape of the output array.
-    :param nclasses: If regression task, will quantize y into nclasses.
+    :param nclasses: If regression task, will quantize y into nclasses. If 1, will simply resample
     :return: The index of the resampled y-vector.
     """
+    if nclasses == 1:
+        return np.random.choice(np.arange(y.shape[0]), size=output_shape)
     if len(y.shape) == 1:
         # regression
         _, bins = np.histogram(y, bins=nclasses)
@@ -59,21 +61,19 @@ def resample(
         output_shape = (y.shape[0], *output_shape[1:])
     uc = np.unique(classes)
     nclasses = uc.shape[0]
-    if nclasses == 1:
-        return np.random.choice(np.arange(y.shape[0]), size=output_shape)
     idx = [np.where(classes == uc[i])[0] for i in range(nclasses)]
     c = np.random.choice(np.arange(nclasses), size=output_shape)
     f = np.vectorize(lambda i: np.random.choice(idx[i]))
     return f(c)
 
 
-def map_reshape(nmodels: int = 5, is_batched=False) -> Callable[..., Tuple[tf.Tensor]]:
+def map_tile(nmodels: int = 5, is_batched=False) -> Callable[..., Tuple[tf.Tensor]]:
     """Duplicate the given record to be compatible with the ensemble model.'
 
-    Each record will be reshaped to (nmodels, *x.shape)
+    Each record will be tiled and shaped to (nmodels, *x.shape) or (B, nmodels, *x.shape) if `is_batched = True`
 
     :param nmodels: The number of ensemble models
-    :param is_batched: If the input is batched, so `nmodels` will go in the first dimension
+    :param is_batched: If the input is batched, so `nmodels` will go in the first axis.
     :return: A function to be used in `tf.data.Dataset.map`
     """
 
