@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+v0.3.1 (2022-05-23)
+--------------------
+
+* Fixed bug in for when nclasses = 1 in resample
+* Renamed data preparation methods to make more sense
+
+
 v0.3.0 (2022-05-05)
 --------------------
 

@@ -136,19 +136,21 @@ dictionary. It does not handle layer connectivity
 <dl class="py method">
 <dt class="sig sig-object py" id="kdens.kdens.DeepEnsemble.get_config">
 <span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.DeepEnsemble.get_config" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the config of the layer.</p>
-<p>A layer config is a Python dictionary (serializable)
-containing the configuration of a layer.
-The same layer can be reinstantiated later
-(without its trained weights) from this configuration.</p>
-<p>The config of a layer does not include connectivity
-information, nor the layer class name. These are handled
-by <cite>Network</cite> (one layer of abstraction above).</p>
+<dd><p>Returns the config of the <cite>Model</cite>.</p>
+<p>Config is a Python dictionary (serializable) containing the configuration of
+an object, which in this case is a <cite>Model</cite>. This allows the <cite>Model</cite> to be
+be reinstantiated later (without its trained weights) from this
+configuration.</p>
 <p>Note that <cite>get_config()</cite> does not guarantee to return a fresh copy of dict
 every time it is called. The callers should make a copy of the returned dict
 if they want to modify it.</p>
+<p>Developers of subclassed <cite>Model</cite> are advised to override this method, and
+continue to update the dict from <cite>super(MyModel, self).get_config()</cite>
+to provide the proper configuration of this <cite>Model</cite>. The default config
+is an empty dict. Optionally, raise <cite>NotImplementedError</cite> to allow Keras to
+attempt a default serialization.</p>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>Python dictionary.</p>
+<dt>Returns:</dt><dd><p>Python dictionary containing the configuration of this <cite>Model</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -193,15 +195,15 @@ must be a multiple of the number of ensemble models</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kdens.kdens.map_reshape">
-<span class="sig-name descname"><span class="pre">map_reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_batched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.map_reshape" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="kdens.kdens.map_tile">
+<span class="sig-name descname"><span class="pre">map_tile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmodels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_batched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kdens.kdens.map_tile" title="Permalink to this definition"></a></dt>
 <dd><p>Duplicate the given record to be compatible with the ensemble model.’</p>
-<p>Each record will be reshaped to (nmodels, <a href="#id3"><span class="problematic" id="id4">*</span></a>x.shape)</p>
+<p>Each record will be tiled and shaped to (nmodels, <a href="#id3"><span class="problematic" id="id4">*</span></a>x.shape) or (B, nmodels, <a href="#id5"><span class="problematic" id="id6">*</span></a>x.shape) if <cite>is_batched = True</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nmodels</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The number of ensemble models</p></li>
-<li><p><strong>is_batched</strong> – If the input is batched, so <cite>nmodels</cite> will go in the first dimension</p></li>
+<li><p><strong>is_batched</strong> – If the input is batched, so <cite>nmodels</cite> will go in the first axis.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -231,7 +233,7 @@ the actual values.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>) – The vector of class labels.</p></li>
 <li><p><strong>output_shape</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>) – The shape of the output array.</p></li>
-<li><p><strong>nclasses</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If regression task, will quantize y into nclasses.</p></li>
+<li><p><strong>nclasses</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If regression task, will quantize y into nclasses. If 1, will simply resample</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
