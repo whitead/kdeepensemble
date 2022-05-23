@@ -131,9 +131,7 @@ class TestKDens(unittest.TestCase):
         z = np.random.randn(100, 10, 3).astype(np.float32)
         y = np.random.randn(100).astype(np.float32)
         data = (
-            tf.data.Dataset.from_tensor_slices(((x, t, z), y))
-            .map(map_tile())
-            .batch(8)
+            tf.data.Dataset.from_tensor_slices(((x, t, z), y)).map(map_tile()).batch(8)
         )
 
         def build():
@@ -158,9 +156,7 @@ class TestKDens(unittest.TestCase):
         z = np.random.randn(100, 10, 3).astype(np.float32)
         y = np.random.randn(100).astype(np.float32)
         data = (
-            tf.data.Dataset.from_tensor_slices(((x, t, z), y))
-            .map(map_tile())
-            .batch(8)
+            tf.data.Dataset.from_tensor_slices(((x, t, z), y)).map(map_tile()).batch(8)
         )
 
         def build():
