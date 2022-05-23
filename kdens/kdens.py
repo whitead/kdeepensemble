@@ -183,9 +183,13 @@ class DeepEnsemble(tf.keras.Model):
 
     @classmethod
     def from_config(cls, config):
+        m = config["models"]
+        p = config["partials"]
+        del config["models"]
+        del config["partials"]
         obj = cls(**config)
-        obj.models.partials = config["partials"]
-        obj.models.models = config["models"]
+        obj.partials = p
+        obj.models = m
 
     def call(self, inputs, training=None):
         """See :py:class:`tf.keras.Model.call`"""
